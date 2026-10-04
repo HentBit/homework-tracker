@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Трекер Домашніх Завдань | Homework Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for better appearance */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .task-card-enter {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-indigo-600 text-white rounded-xl shadow-md">
+                    <i data-lucide="check-square" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900 leading-tight">Homework Tracker</h1>
+                    <p class="text-xs text-slate-500">Організатор та контроль завдань</p>
+                </div>
+            </div>
+            <button id="open-task-modal-btn" class="inline-flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-xl transition duration-200 shadow-sm hover:shadow active:scale-95">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Нове завдання</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        <!-- Statistics Dashboard -->
+        <section class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Total Tasks -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Всього завдань</p>
+                    <h3 id="stat-total" class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">0</h3>
+                </div>
+                <div class="p-3 bg-slate-100 text-slate-600 rounded-xl">
+                    <i data-lucide="list-todo" class="w-6 h-6"></i>
+                </div>
+            </div>
+
+            <!-- In Progress -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-amber-600">В процесі</p>
+                    <h3 id="stat-in-progress" class="text-2xl sm:text-3xl font-extrabold text-amber-600 mt-1">0</h3>
+                </div>
+                <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
+                    <i data-lucide="clock" class="w-6 h-6"></i>
+                </div>
+            </div>
+
+            <!-- Completed -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-emerald-600">Виконано</p>
+                    <h3 id="stat-completed" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-1">0</h3>
+                </div>
+                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                    <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+                </div>
+            </div>
+
+            <!-- Overdue -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-rose-600">Протерміновано</p>
+                    <h3 id="stat-overdue" class="text-2xl sm:text-3xl font-extrabold text-rose-600 mt-1">0</h3>
+                </div>
+                <div class="p-3 bg-rose-50 text-rose-600 rounded-xl">
+                    <i data-lucide="alert-circle" class="w-6 h-6"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress Bar Section -->
+        <section class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+            <div class="flex justify-between items-center text-sm">
+                <span class="font-medium text-slate-700">Загальний прогрес виконання</span>
+                <span id="progress-percentage" class="font-semibold text-indigo-600">0%</span>
+            </div>
+            <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                <div id="progress-bar-fill" class="bg-indigo-600 h-full rounded-full transition-all duration-500 w-0"></div>
+            </div>
+        </section>
+
+        <!-- Controls Toolbar (Search, Filter, Sort, View Switcher) -->
+        <section class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                
+                <!-- Search Input -->
+                <div class="md:col-span-4 relative">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="search-input" placeholder="Пошук за назвою або темою..." class="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
+                </div>
+
+                <!-- Status Filter -->
+                <div class="md:col-span-2">
+                    <select id="filter-status" class="w-full py-2 px-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                        <option value="all">Усі статуси</option>
+                        <option value="pending">В процесі</option>
+                        <option value="completed">Виконані</option>
+                        <option value="overdue">Протерміновані</option>
+                    </select>
+                </div>
+
+                <!-- Subject Filter -->
+                <div class="md:col-span-2">
+                    <select id="filter-subject" class="w-full py-2 px-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                        <option value="all">Усі предмети</option>
+                        <!-- Dynamic subject options -->
+                    </select>
+                </div>
+
+                <!-- Sort By -->
+                <div class="md:col-span-2">
+                    <select id="sort-by" class="w-full py-2 px-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                        <option value="deadline-asc">Дедлайн (спочатку найближчі)</option>
+                        <option value="deadline-desc">Дедлайн (спочатку найпізніші)</option>
+                        <option value="priority-desc">Пріоритет (високий -> низький)</option>
+                        <option value="priority-asc">Пріоритет (низький -> високий)</option>
+                    </select>
+                </div>
+
+                <!-- View Switcher Toggle -->
+                <div class="md:col-span-2 flex justify-end space-x-1 bg-slate-100 p-1 rounded-xl">
+                    <button id="view-cards-btn" class="flex-1 py-1.5 flex justify-center items-center rounded-lg text-sm font-medium transition bg-white text-slate-800 shadow-sm" title="Вигляд картками">
+                        <i data-lucide="layout-grid" class="w-4 h-4"></i>
+                    </button>
+                    <button id="view-table-btn" class="flex-1 py-1.5 flex justify-center items-center rounded-lg text-sm font-medium transition text-slate-500 hover:text-slate-800" title="Вигляд таблицею">
+                        <i data-lucide="list" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Task Container Section -->
+        <section>
+            <!-- Cards View -->
+            <div id="tasks-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Task Cards will be inserted here dynamically -->
+            </div>
+
+            <!-- Table View (Hidden by default) -->
+            <div id="tasks-table-container" class="hidden bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase font-semibold text-slate-500">
+                                <th class="py-3 px-4">Статус</th>
+                                <th class="py-3 px-4">Предмет</th>
+                                <th class="py-3 px-4">Опис / Тема</th>
+                                <th class="py-3 px-4">Дедлайн</th>
+                                <th class="py-3 px-4">Пріоритет</th>
+                                <th class="py-3 px-4 text-right">Дії</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tasks-table-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- Rows will be inserted here dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden py-16 text-center space-y-3 bg-white rounded-2xl border border-slate-200 shadow-sm my-4">
+                <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto">
+                    <i data-lucide="inbox" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-800">Завдань не знайдено</h3>
+                <p class="text-slate-500 text-sm max-w-sm mx-auto">Створіть нове завдання або змініть налаштування фільтрації та пошуку.</p>
+                <button id="empty-add-btn" class="inline-flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-xl text-sm transition">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Додати завдання</span>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Window (Add/Edit Task) -->
+    <div id="task-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden transform transition-all">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 id="modal-title" class="text-lg font-bold text-slate-900">Створити завдання</h3>
+                <button id="close-modal-btn" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-200/50 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form id="task-form" class="p-6 space-y-4">
+                <input type="hidden" id="task-id">
+
+                <!-- Subject -->
+                <div>
+                    <label for="task-subject" class="block text-sm font-medium text-slate-700 mb-1">Предмет <span class="text-rose-500">*</span></label>
+                    <input type="text" id="task-subject" required placeholder="напр. Математика, Фізика, Історія" class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                </div>
+
+                <!-- Description/Topic -->
+                <div>
+                    <label for="task-title" class="block text-sm font-medium text-slate-700 mb-1">Тема / Опис завдання <span class="text-rose-500">*</span></label>
+                    <textarea id="task-title" required rows="3" placeholder="напр. Розв'язати вправи №10-15 на сторінці 42" class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"></textarea>
+                </div>
+
+                <!-- Grid for Deadline and Priority -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Deadline -->
+                    <div>
+                        <label for="task-deadline" class="block text-sm font-medium text-slate-700 mb-1">Термін виконання <span class="text-rose-500">*</span></label>
+                        <input type="datetime-local" id="task-deadline" required class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                    </div>
+
+                    <!-- Priority -->
+                    <div>
+                        <label for="task-priority" class="block text-sm font-medium text-slate-700 mb-1">Пріоритет</label>
+                        <select id="task-priority" class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                            <option value="low">Низький</option>
+                            <option value="medium" selected>Середній</option>
+                            <option value="high">Високий</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="pt-4 flex justify-end space-x-3 border-t border-slate-100">
+                    <button type="button" id="cancel-modal-btn" class="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
+                        Скасувати
+                    </button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-sm">
+                        Зберегти
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+    <script>
+        /* Homework Tracker Application Logic */
+
+        // Priority Mappings and Badges Configuration
+        const PRIORITY_MAP = {
+            low: { name: 'Низький', class: 'bg-slate-100 text-slate-700 border-slate-200', order: 1 },
+            medium: { name: 'Середній', class: 'bg-amber-50 text-amber-700 border-amber-200', order: 2 },
+            high: { name: 'Високий', class: 'bg-rose-50 text-rose-700 border-rose-200', order: 3 }
+        };
+
+        // Application State
+        let tasks = [];
+        let currentView = 'cards'; // 'cards' | 'table'
+
+        // DOM Elements
+        const modal = document.getElementById('task-modal');
+        const taskForm = document.getElementById('task-form');
+        const cardsContainer = document.getElementById('tasks-cards-container');
+        const tableContainer = document.getElementById('tasks-table-container');
+        const tableBody = document.getElementById('tasks-table-body');
+        const emptyState = document.getElementById('empty-state');
+        
+        // Filter Elements
+        const searchInput = document.getElementById('search-input');
+        const filterStatus = document.getElementById('filter-status');
+        const filterSubject = document.getElementById('filter-subject');
+        const sortBy = document.getElementById('sort-by');
+
+        // View Switches
+        const viewCardsBtn = document.getElementById('view-cards-btn');
+        const viewTableBtn = document.getElementById('view-table-btn');
+
+        // Initialize App
+        window.onload = function() {
+            loadTasksFromStorage();
+            setupEventListeners();
+            render();
+            lucide.createIcons();
+        };
+
+        // Save & Load LocalStorage Functions
+        function saveTasksToStorage() {
+            try {
+                localStorage.setItem('hw_tracker_tasks', JSON.stringify(tasks));
+            } catch (e) {
+                showToast('Помилка збереження даних', 'error');
+            }
+        }
+
+        function loadTasksFromStorage() {
+            try {
+                const data = localStorage.getItem('hw_tracker_tasks');
+                if (data) {
+                    tasks = JSON.parse(data);
+                } else {
+                    // Seed initial sample tasks if empty
+                    tasks = [
+                        {
+                            id: '1',
+                            subject: 'Математика',
+                            title: 'Розв\'язати задачі №104, 105 зі сторінки 32.',
+                            deadline: new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 16),
+                            priority: 'high',
+                            completed: false,
+                            createdAt: new Date().toISOString()
+                        },
+                        {
+                            id: '2',
+                            subject: 'Англійська мова',
+                            title: 'Прочитати текст Unit 4 та вивчити нові слова.',
+                            deadline: new Date(Date.now() + 86400000 * 4).toISOString().slice(0, 16),
+                            priority: 'medium',
+                            completed: true,
+                            createdAt: new Date().toISOString()
+                        }
+                    ];
+                    saveTasksToStorage();
+                }
+            } catch (e) {
+                tasks = [];
+                showToast('Помилка зчитування збережених даних', 'error');
+            }
+        }
+
+        function setupEventListeners() {
+            // Modal Toggles
+            document.getElementById('open-task-modal-btn').addEventListener('click', () => openModal());
+            document.getElementById('empty-add-btn').addEventListener('click', () => openModal());
+            document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+            document.getElementById('cancel-modal-btn').addEventListener('click', closeModal);
+
+            // Form Submit
+            taskForm.addEventListener('submit', handleFormSubmit);
+
+            // Search and Filters
+            searchInput.addEventListener('input', render);
+            filterStatus.addEventListener('change', render);
+            filterSubject.addEventListener('change', render);
+            sortBy.addEventListener('change', render);
+
+            // View Switcher Buttons
+            viewCardsBtn.addEventListener('click', () => switchView('cards'));
+            viewTableBtn.addEventListener('click', () => switchView('table'));
+
+            // Keyboard Shortcuts
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+        }
+
+        // Switch View Mode (Cards or Table)
+        function switchView(mode) {
+            currentView = mode;
+            if (mode === 'cards') {
+                viewCardsBtn.className = "flex-1 py-1.5 flex justify-center items-center rounded-lg text-sm font-medium transition bg-white text-slate-800 shadow-sm";
+                viewTableBtn.className = "flex-1 py-1.5 flex justify-center items-center rounded-lg text-sm font-medium transition text-slate-500 hover:text-slate-800";
+            } else {
+                viewTableBtn.className = "flex-1 py-1.5 flex justify-center items-center rounded-lg text-sm font-medium transition bg-white text-slate-800 shadow-sm";
+                viewCardsBtn.className = "flex-1 py-1.5 flex justify-center items-center rounded-lg text-sm font-medium transition text-slate-500 hover:text-slate-800";
+            }
+            render();
+        }
+
+        // Modal Control Functions
+        function openModal(taskId = null) {
+            taskForm.reset();
+            document.getElementById('task-id').value = '';
+
+            if (taskId) {
+                const task = tasks.find(t => t.id === taskId);
+                if (task) {
+                    document.getElementById('modal-title').textContent = 'Редагувати завдання';
+                    document.getElementById('task-id').value = task.id;
+                    document.getElementById('task-subject').value = task.subject;
+                    document.getElementById('task-title').value = task.title;
+                    document.getElementById('task-deadline').value = task.deadline;
+                    document.getElementById('task-priority').value = task.priority;
+                }
+            } else {
+                document.getElementById('modal-title').textContent = 'Створити завдання';
+                // Set default deadline to tomorrow 18:00
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                tomorrow.setHours(18, 0, 0, 0);
+                document.getElementById('task-deadline').value = tomorrow.toISOString().slice(0, 16);
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+        }
+
+        // Handle Add/Edit Form Submit
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('task-id').value;
+            const subject = document.getElementById('task-subject').value.trim();
+            const title = document.getElementById('task-title').value.trim();
+            const deadline = document.getElementById('task-deadline').value;
+            const priority = document.getElementById('task-priority').value;
+
+            if (!subject || !title || !deadline) {
+                showToast('Будь ласка, заповніть усі обов’язкові поля', 'error');
+                return;
+            }
+
+            if (id) {
+                // Update existing task
+                const taskIndex = tasks.findIndex(t => t.id === id);
+                if (taskIndex !== -1) {
+                    tasks[taskIndex] = { ...tasks[taskIndex], subject, title, deadline, priority };
+                    showToast('Завдання успішно оновлено!');
+                }
+            } else {
+                // Create new task
+                const newTask = {
+                    id: Date.now().toString(),
+                    subject,
+                    title,
+                    deadline,
+                    priority,
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                };
+                tasks.push(newTask);
+                showToast('Нове завдання додано!');
+            }
+
+            saveTasksToStorage();
+            closeModal();
+            updateSubjectFilterOptions();
+            render();
+        }
+
+        // Toggle Task Completion
+        function toggleTaskStatus(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                saveTasksToStorage();
+                showToast(task.completed ? 'Завдання позначено як виконане!' : 'Завдання відтворено в процес');
+                render();
+            }
+        }
+
+        // Delete Task
+        function deleteTask(id) {
+            if (confirm('Ви впевнені, що хочете видалити це завдання?')) {
+                tasks = tasks.filter(t => t.id !== id);
+                saveTasksToStorage();
+                updateSubjectFilterOptions();
+                showToast('Завдання видалено');
+                render();
+            }
+        }
+
+        // Helper: Check if task is overdue
+        function isOverdue(deadlineStr, isCompleted) {
+            if (isCompleted) return false;
+            return new Date(deadlineStr) < new Date();
+        }
+
+        // Populate Subject Filter Dynamic Options
+        function updateSubjectFilterOptions() {
+            const selected = filterSubject.value;
+            const subjects = [...new Set(tasks.map(t => t.subject.trim()))].sort();
+            
+            filterSubject.innerHTML = '<option value="all">Усі предмети</option>';
+            subjects.forEach(subj => {
+                const opt = document.createElement('option');
+                opt.value = subj;
+                opt.textContent = subj;
+                filterSubject.appendChild(opt);
+            });
+
+            if (subjects.includes(selected)) {
+                filterSubject.value = selected;
+            } else {
+                filterSubject.value = 'all';
+            }
+        }
+
+        // Main Render Function
+        function render() {
+            updateStatistics();
+            
+            let filtered = tasks.filter(task => {
+                // Search Filter
+                const query = searchInput.value.toLowerCase();
+                const matchesSearch = task.subject.toLowerCase().includes(query) || task.title.toLowerCase().includes(query);
+
+                // Status Filter
+                const overdue = isOverdue(task.deadline, task.completed);
+                let matchesStatus = true;
+                if (filterStatus.value === 'pending') matchesStatus = !task.completed && !overdue;
+                if (filterStatus.value === 'completed') matchesStatus = task.completed;
+                if (filterStatus.value === 'overdue') matchesStatus = overdue;
+
+                // Subject Filter
+                let matchesSubject = filterSubject.value === 'all' || task.subject === filterSubject.value;
+
+                return matchesSearch && matchesStatus && matchesSubject;
+            });
+
+            // Sorting Logic
+            const sortVal = sortBy.value;
+            filtered.sort((a, b) => {
+                if (sortVal === 'deadline-asc') return new Date(a.deadline) - new Date(b.deadline);
+                if (sortVal === 'deadline-desc') return new Date(b.deadline) - new Date(a.deadline);
+                if (sortVal === 'priority-desc') return PRIORITY_MAP[b.priority].order - PRIORITY_MAP[a.priority].order;
+                if (sortVal === 'priority-asc') return PRIORITY_MAP[a.priority].order - PRIORITY_MAP[b.priority].order;
+                return 0;
+            });
+
+            // Toggle views based on result count & selected view
+            if (filtered.length === 0) {
+                cardsContainer.classList.add('hidden');
+                tableContainer.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                if (currentView === 'cards') {
+                    tableContainer.classList.add('hidden');
+                    cardsContainer.classList.remove('hidden');
+                    renderCards(filtered);
+                } else {
+                    cardsContainer.classList.add('hidden');
+                    tableContainer.classList.remove('hidden');
+                    renderTable(filtered);
+                }
+            }
+
+            lucide.createIcons();
+        }
+
+        // Update Dashboard Statistics & Progress
+        function updateStatistics() {
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.completed).length;
+            const overdue = tasks.filter(t => isOverdue(t.deadline, t.completed)).length;
+            const inProgress = tasks.filter(t => !t.completed && !isOverdue(t.deadline, t.completed)).length;
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-in-progress').textContent = inProgress;
+            document.getElementById('stat-completed').textContent = completed;
+            document.getElementById('stat-overdue').textContent = overdue;
+
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+            document.getElementById('progress-percentage').textContent = `${percentage}%`;
+            document.getElementById('progress-bar-fill').style.width = `${percentage}%`;
+        }
+
+        // Render Cards View
+        function renderCards(taskList) {
+            cardsContainer.innerHTML = '';
+            
+            taskList.forEach(task => {
+                const overdue = isOverdue(task.deadline, task.completed);
+                const dateObj = new Date(task.deadline);
+                const formattedDate = dateObj.toLocaleString('uk-UA', { dateStyle: 'short', timeStyle: 'short' });
+
+                const card = document.createElement('div');
+                card.className = `task-card-enter bg-white p-5 rounded-2xl border transition hover:shadow-md flex flex-col justify-between space-y-4 ${
+                    task.completed ? 'border-slate-200 bg-slate-50/50 opacity-80' : overdue ? 'border-rose-200 bg-rose-50/20' : 'border-slate-200'
+                }`;
+
+                card.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between gap-2">
+                            <span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100 max-w-[180px] truncate">
+                                ${escapeHtml(task.subject)}
+                            </span>
+                            <span class="px-2.5 py-1 text-xs font-medium rounded-lg border ${PRIORITY_MAP[task.priority].class}">
+                                ${PRIORITY_MAP[task.priority].name}
+                            </span>
+                        </div>
+
+                        <p class="text-slate-800 font-medium leading-snug break-words ${task.completed ? 'line-through text-slate-400' : ''}">
+                            ${escapeHtml(task.title)}
+                        </p>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                        <div class="flex items-center space-x-1.5 ${overdue ? 'text-rose-600 font-semibold' : 'text-slate-500'}">
+                            <i data-lucide="${overdue ? 'alert-triangle' : 'calendar'}" class="w-4 h-4"></i>
+                            <span>${formattedDate}</span>
+                        </div>
+
+                        <div class="flex items-center space-x-1">
+                            <button onclick="toggleTaskStatus('${task.id}')" class="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 transition" title="${task.completed ? 'Відновити' : 'Завершити'}">
+                                <i data-lucide="${task.completed ? 'rotate-ccw' : 'check'}" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="openModal('${task.id}')" class="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-slate-100 transition" title="Редагувати">
+                                <i data-lucide="edit-2" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="deleteTask('${task.id}')" class="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-slate-100 transition" title="Видалити">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                cardsContainer.appendChild(card);
+            });
+        }
+
+        // Render Table View
+        function renderTable(taskList) {
+            tableBody.innerHTML = '';
+
+            taskList.forEach(task => {
+                const overdue = isOverdue(task.deadline, task.completed);
+                const dateObj = new Date(task.deadline);
+                const formattedDate = dateObj.toLocaleString('uk-UA', { dateStyle: 'short', timeStyle: 'short' });
+
+                const tr = document.createElement('tr');
+                tr.className = `hover:bg-slate-50/80 transition ${task.completed ? 'bg-slate-50/50 text-slate-400' : ''}`;
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4">
+                        <button onclick="toggleTaskStatus('${task.id}')" class="inline-flex items-center space-x-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border ${
+                            task.completed 
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                                : overdue 
+                                ? 'bg-rose-50 text-rose-700 border-rose-200' 
+                                : 'bg-amber-50 text-amber-700 border-amber-200'
+                        }">
+                            <i data-lucide="${task.completed ? 'check-circle-2' : overdue ? 'alert-circle' : 'clock'}" class="w-3.5 h-3.5"></i>
+                            <span>${task.completed ? 'Виконано' : overdue ? 'Протерміновано' : 'В процесі'}</span>
+                        </button>
+                    </td>
+                    <td class="py-3 px-4 font-semibold text-slate-800">${escapeHtml(task.subject)}</td>
+                    <td class="py-3 px-4 max-w-xs truncate ${task.completed ? 'line-through text-slate-400' : 'text-slate-700'}">${escapeHtml(task.title)}</td>
+                    <td class="py-3 px-4 text-xs ${overdue ? 'text-rose-600 font-bold' : 'text-slate-500'}">${formattedDate}</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-0.5 text-xs font-medium rounded-md border ${PRIORITY_MAP[task.priority].class}">
+                            ${PRIORITY_MAP[task.priority].name}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                        <div class="inline-flex items-center space-x-1">
+                            <button onclick="openModal('${task.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-slate-100 transition" title="Редагувати">
+                                <i data-lucide="edit-2" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="deleteTask('${task.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 transition" title="Видалити">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // Helper: Toast Notifications
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const isError = type === 'error';
+            toast.className = `pointer-events-auto flex items-center space-x-2 px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition transform translate-y-2 opacity-0 text-white ${
+                isError ? 'bg-rose-600' : 'bg-slate-900'
+            }`;
+
+            toast.innerHTML = `
+                <i data-lucide="${isError ? 'alert-triangle' : 'check-circle'}" class="w-4 h-4"></i>
+                <span>${escapeHtml(message)}</span>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            // Trigger animation
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            // Hide and remove
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Helper: Sanitize string input to prevent XSS
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>
